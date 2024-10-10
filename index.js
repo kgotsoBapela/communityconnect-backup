@@ -56,16 +56,22 @@ app.get('/api/users', (req, res) => {
 });
 });
 
-// Get user profile
-app.get('/api/user-profile/:userId', (req, res) => {
+// Get borrowing history
+app.get('/api/borrowing-history/:userId', (req, res) => {
   const { userId } = req.params;
 
-  connection.query(`SELECT * FROM users WHERE id = ?`, [userId], (err, row) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
+  connection.query(`SELECT bikes.model, borrowings.borrowDate, borrowings.returnDate
+     FROM borrowings
+     JOIN bikes ON borrowings.bikeId = bikes.id
+     WHERE borrowings.userId = ?`,
+    [userId],
+    (err, rows) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+      res.json(rows);
     }
-    res.json(row);
-  });
+  );
 });
 
 
