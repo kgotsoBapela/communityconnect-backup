@@ -1,7 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors'); // Import CORS
-const db = require('./db');
 const app = express();
 const PORT = process.env.PORT || 5000;
 const mysql = require('mysql');
@@ -41,6 +40,33 @@ app.get('/api/bikes', (req, res) => {
 });
 });
 
+
+
+
+// Fetch USERS from the database
+app.get('/api/users', (req, res) => {
+    
+    connection.query('SELECT * FROM users', (error, results) => {
+      if (error) {
+          console.error('Error fetching users from the database: ' + error.stack);
+          return res.status(500).json({ error: 'Failed to fetch users' });
+    }
+    res.json(results);
+    console.log("/api/bikes Data Fetched");
+});
+});
+
+// Get user profile
+app.get('/api/user-profile/:userId', (req, res) => {
+  const { userId } = req.params;
+
+  connection.query(`SELECT * FROM users WHERE id = ?`, [userId], (err, row) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    res.json(row);
+  });
+});
 
 
 app.listen(PORT, () => {  
