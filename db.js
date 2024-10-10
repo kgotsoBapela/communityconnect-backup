@@ -1,49 +1,30 @@
-const sqlite3 = require('sqlite3').verbose();
-const db = new sqlite3.Database('./bikes.db');
+const express = require('express');
+const bodyParser = require('body-parser');
+const cors = require('cors'); // Import CORS
+const db = require('./db');
+const app = express();
+const PORT = process.env.PORT || 5000;
+const mysql = require('mysql');
 
-// Create tables
-db.serialize(() => {
-  db.run(`
-    CREATE TABLE IF NOT EXISTS bikes (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      model TEXT,
-      status TEXT
-    );
-  `);
+// Middleware
+app.use(bodyParser.json());
+app.use(cors());  // Enable CORS
 
-  db.run(`
-    CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT,
-      email TEXT,
-      memberSince TEXT
-    );
-  `);
 
-  db.run(`
-    CREATE TABLE IF NOT EXISTS borrowings (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      userId INTEGER,
-      bikeId INTEGER,
-      borrowDate TEXT,
-      returnDate TEXT,
-      FOREIGN KEY (userId) REFERENCES users(id),
-      FOREIGN KEY (bikeId) REFERENCES bikes(id)
-    );
-  `);
+const connection = mysql.createConnection({
+    host     : 'm7wltxurw8d2n21q.cbetxkdyhwsb.us-east-1.rds.amazonaws.com',
+    user     : 'fqhiq5kpxxkd2kk2',
+    password : 'e6j2p44f9a5rpdot',
+    database : 'a1ezksehptl095xk'
+  })
 
-  // Seed data
-  db.run(`
-    INSERT INTO bikes (model, status) VALUES
-    ('Erdgeschoss Pang! Pink', 'available'),
-    ('Erdgeschoss Yeah! Yellow', 'available'),
-    ('Kettensäge | Team', 'not available');
-  `);
 
-  db.run(`
-    INSERT INTO users (name, email, memberSince) VALUES
-    ('Kgotso Bapela', 'kgotso.bapela@gmail.com', '2022-01-15');
-  `);
-});
+  connection.connect((err) => {
+    if (err) {
+        console.error('Error connecting to the database: ' + err.stack);
+        return;
+  }
+    console.log('Connected to the database as ID ' + connection.threadId);
+  });
 
 module.exports = db;
