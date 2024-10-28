@@ -1,81 +1,61 @@
+//index.js
 const express = require('express');
-const bodyParser = require('body-parser');
-const cors = require('cors'); // Import CORS
+const { MongoClient } = require('mongodb');
+
 const app = express();
-const PORT = process.env.PORT || 5000;
-const mysql = require('mysql');
+const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(bodyParser.json());
-app.use(cors());  // Enable CORS
+// Middleware to parse JSON bodies
+app.use(express.json());
 
+// MongoDB connection URL and client
+const uri = 'mongodb+srv://root:qSlLxmv1UhtoPFxV@communityconnectapi.lmu84.mongodb.net/?retryWrites=true&w=majority&appName=communityconnectAPI'; // Change to your MongoDB connection string
+const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+const dbName = 'CCxStandert'; // Change to your database name
 
-// Create a MySQL connection
-const connection = mysql.createConnection({
-  host     : 'm7wltxurw8d2n21q.cbetxkdyhwsb.us-east-1.rds.amazonaws.com',
-  user     : 'fqhiq5kpxxkd2kk2',
-  password : 'e6j2p44f9a5rpdot',
-  database : 'a1ezksehptl095xk'
-})
-
-// Connect to the MySQL database
-connection.connect((err) => {
-  if (err) {
-      console.error('Error connecting to the database: ' + err.stack);
-      return;
+// Connect to MongoDB
+async function connectDB() {
+    try {
+        await client.connect();
+        console.log('Connected to MongoDB');
+    } catch (error) {
+        console.error('MongoDB connection error:', error);
+    }
 }
-  console.log('Connected to the database as ID ' + connection.threadId);
-});
 
-// Fetch bikes from the database
-app.get('/api/bikes', (req, res) => {
-    
-    connection.query('SELECT * FROM bikes', (error, results) => {
-      if (error) {
-          console.error('Error fetching users from the database: ' + error.stack);
-          return res.status(500).json({ error: 'Failed to fetch users' });
+// Sample route to create a new user
+app.post('/users', async (req, res) => {
+    const { name, email, age } = req.body;
+
+    try {
+        const db = client.db(dbName);
+        const usersCollection = db.collection('users');
+
+        const newUser = { name, email, age };
+        const result = await usersCollection.insertOne(newUser);
+
+        res.status(201).json(result.ops[0]); // Return the bikes
+        console.log('All bikes fetched successfully');
+    } catch (error) {
+        res.status(400).json({ error: error.message });
     }
-    res.json(results);
-    console.log("/api/bikes Data Fetched");
-});
 });
 
+// Sample route to get all bikes
+app.get('/bikes', async (req, res) => {
+    try {
+        const db = client.db(dbName);
+        const bikesCollection = db.collection('bikes');
 
-
-
-// Fetch USERS from the database
-app.get('/api/users', (req, res) => {
-    
-    connection.query('SELECT * FROM users', (error, results) => {
-      if (error) {
-          console.error('Error fetching users from the database: ' + error.stack);
-          return res.status(500).json({ error: 'Failed to fetch users' });
+        const bikes = await bikesCollection.find().toArray();
+        res.json(bikes);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
-    res.json(results);
-    console.log("/api/bikes Data Fetched");
-});
 });
 
-// Get borrowing history
-app.get('/api/borrowing-history/:userId', (req, res) => {
-  const { userId } = req.params;
-
-  connection.query(`SELECT bikes.model, borrowings.borrowDate, borrowings.returnDate
-     FROM borrowings
-     JOIN bikes ON borrowings.bikeId = bikes.id
-     WHERE borrowings.userId = ?`,
-    [userId],
-    (err, rows) => {
-      if (err) {
-        return res.status(500).json({ error: err.message });
-      }
-      res.json(rows);
-    }
-  );
+// Start the server
+app.listen(PORT, async () => {
+    await connectDB(); // Ensure the database is connected before starting the server
+    console.log(`Server is running on http://localhost:${PORT}`);
 });
-
-
-app.listen(PORT, () => {  
-  console.log(`Local server is running on http://localhost:${PORT}`);
-});
-
