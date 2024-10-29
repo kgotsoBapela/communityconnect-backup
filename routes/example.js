@@ -8,7 +8,7 @@ const router = express.Router();
 router.get('/', async (req, res) => {
     try {
         const db = getDB();
-        const collection = db.collection('example'); // Replace with your collection name
+        const collection = db.collection('new'); // Replace with your collection name
         const data = await collection.find({}).toArray();
         res.json(data);
     } catch (error) {
