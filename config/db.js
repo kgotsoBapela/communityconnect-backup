@@ -2,7 +2,7 @@
 const { MongoClient } = require('mongodb');
 require('dotenv').config();
 
-db = process.env.DB_NAME;
+let db = "CCxStandert";
 
 async function connectDB() {
     try {

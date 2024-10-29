@@ -10,7 +10,7 @@ router.post('/', async (req, res) => {
         const db = getDB();
         const user = req.body; // Expecting user data in the request body
 
-        const result = await db.collection('users').insertOne(user);
+        const result = await db.collection('CCxStandert').insertOne(user);
         res.status(201).json({ message: 'User created', userId: result.insertedId });
     } catch (error) {
         console.error('Error creating user:', error);
