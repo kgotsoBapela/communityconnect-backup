@@ -1,6 +1,7 @@
 // routes/user.js
 const express = require('express');
 const { getDB } = require('../config/db');
+const { ObjectId } = require('mongodb');
 
 const router = express.Router();
 
@@ -10,7 +11,7 @@ router.post('/', async (req, res) => {
         const db = getDB();
         const user = req.body; // Expecting user data in the request body
 
-        const result = await db.collection('CCxStandert').insertOne(user);
+        const result = await db.collection('users').insertOne(user);
         res.status(201).json({ message: 'User created', userId: result.insertedId });
     } catch (error) {
         console.error('Error creating user:', error);
@@ -36,7 +37,7 @@ router.get('/:id', async (req, res) => {
         const db = getDB();
         const userId = req.params.id;
 
-        const user = await db.collection('users').findOne({ _id: new require('mongodb').ObjectId(userId) });
+        const user = await db.collection('users').findOne({ _id: ObjectId(userId) });
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
@@ -55,7 +56,7 @@ router.put('/:id', async (req, res) => {
         const updatedUser = req.body;
 
         const result = await db.collection('users').updateOne(
-            { _id: new require('mongodb').ObjectId(userId) },
+            { _id: ObjectId(userId) },
             { $set: updatedUser }
         );
 
@@ -75,7 +76,7 @@ router.delete('/:id', async (req, res) => {
         const db = getDB();
         const userId = req.params.id;
 
-        const result = await db.collection('users').deleteOne({ _id: new require('mongodb').ObjectId(userId) });
+        const result = await db.collection('users').deleteOne({ _id: ObjectId(userId) });
         if (result.deletedCount === 0) {
             return res.status(404).json({ error: 'User not found' });
         }
@@ -87,3 +88,11 @@ router.delete('/:id', async (req, res) => {
 });
 
 module.exports = router;
+
+
+// User Routes:
+// Create User: POST /api/users
+// Get All Users: GET /api/users
+// Get User by ID: GET /api/users/:id
+// Update User by ID: PUT /api/users/:id
+// Delete User by ID: DELETE /api/users/:id
