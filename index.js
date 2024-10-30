@@ -1,13 +1,13 @@
 // app.js
 const express = require('express');
-const { connectDB } = require('./config/db');
+// const { connectDB } = require('./config/db');
 const bodyParser = require('body-parser');
 const cors = require('cors'); // Import CORS
 
 const app = express();
 
 // Connect to MongoDB
-connectDB();
+// connectDB();
 
 // Middleware
 app.use(express.json()); // for parsing application/json
@@ -15,7 +15,7 @@ app.use(cors());
 
 
 // Routes
-app.use('/api/example', require('./routes/example'));
+// app.use('/api/example', require('./routes/example'));
 app.use('/api/users', require('./routes/user')); // Add user routes here
 app.use('/api/bikes', require('./routes/bike')); // Add bike routes here
 

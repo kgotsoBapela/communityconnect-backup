@@ -1,98 +1,141 @@
-// routes/user.js
 const express = require('express');
-const { getDB } = require('../config/db');
-const { ObjectId } = require('mongodb');
+const { connectToDatabase } = require('../config/db');
+const { ObjectId } = require('mongodb'); // Import ObjectId to handle MongoDB IDs
 
 const router = express.Router();
 
-// Create a new user
-router.post('/', async (req, res) => {
+// GET /users - Fetch all users
+router.get('/', async (req, res) => {
     try {
-        const db = getDB();
-        const user = req.body; // Expecting user data in the request body
+        const db = await connectToDatabase();
+        const users = await db.collection('users').find({}).toArray(); // Fetch all users
+        res.status(200).json(users);
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
 
-        const result = await db.collection('users').insertOne(user);
+// POST /users - Create a new user
+router.post('/', async (req, res) => {
+    const newUser = req.body;
+
+    try {
+        const db = await connectToDatabase();
+        const result = await db.collection('users').insertOne(newUser); // Insert new user
         res.status(201).json({ message: 'User created', userId: result.insertedId });
     } catch (error) {
         console.error('Error creating user:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        res.status(500).json({ message: 'Internal Server Error' });
     }
 });
 
-// Get all users
-router.get('/', async (req, res) => {
-    try {
-        const db = getDB();
-        const users = await db.collection('users').find({}).toArray();
-        res.json(users);
-    } catch (error) {
-        console.error('Error fetching users:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
-
-// Get a user by ID
+// GET /users/id - Fetch a user by ID
 router.get('/:id', async (req, res) => {
-    try {
-        const db = getDB();
-        const userId = req.params.id;
+    const userId = req.params.id;
 
-        const user = await db.collection('users').findOne({ _id: ObjectId(userId) });
+    // Validate ObjectId format
+    if (!ObjectId.isValid(userId)) {
+        return res.status(400).json({ message: 'Invalid user ID format' });
+    }
+
+    try {
+        const db = await connectToDatabase();
+        const user = await db.collection('users').findOne({ _id: new ObjectId(userId) });
+
         if (!user) {
-            return res.status(404).json({ error: 'User not found' });
+            return res.status(404).json({ message: 'User not found' });
         }
-        res.json(user);
+
+        res.status(200).json(user);
     } catch (error) {
-        console.error('Error fetching user:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        console.error('Error fetching user by ID:', error);
+        res.status(500).json({ message: 'Internal Server Error', error: error.message });
     }
 });
 
-// Update a user by ID
-router.put('/:id', async (req, res) => {
-    try {
-        const db = getDB();
-        const userId = req.params.id;
-        const updatedUser = req.body;
+// GET /users/cellphone/:cellphone - Fetch a user by cellphone
+router.get('/cellphone/:cellphone', async (req, res) => {
+    const { cellphone } = req.params;
 
+    try {
+        const db = await connectToDatabase();
+        const user = await db.collection('users').findOne({ cellphone });
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.status(200).json(user);
+    } catch (error) {
+        console.error('Error fetching user by cellphone:', error);
+        res.status(500).json({ message: 'Internal Server Error', error: error.message });
+    }
+});
+
+// PUT /users/cellphone/:cellphone - Update a user by cellphone
+router.put('/cellphone/:cellphone', async (req, res) => {
+    const { cellphone } = req.params;
+    const updatedUser = req.body;
+
+    try {
+        const db = await connectToDatabase();
         const result = await db.collection('users').updateOne(
-            { _id: ObjectId(userId) },
-            { $set: updatedUser }
+            { cellphone }, // Filter by cellphone
+            { $set: updatedUser } // Update fields
         );
 
-        if (result.matchedCount === 0) {
-            return res.status(404).json({ error: 'User not found' });
+        if (result.modifiedCount === 0) {
+            return res.status(404).json({ message: 'User not found or no changes made' });
         }
-        res.json({ message: 'User updated' });
+
+        res.status(200).json({ message: 'User updated' });
     } catch (error) {
-        console.error('Error updating user:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        console.error('Error updating user by cellphone:', error);
+        res.status(500).json({ message: 'Internal Server Error', error: error.message });
     }
 });
 
-// Delete a user by ID
-router.delete('/:id', async (req, res) => {
-    try {
-        const db = getDB();
-        const userId = req.params.id;
+// GET /users/email/:email - Fetch a user by email
+router.get('/email/:email', async (req, res) => {
+    const { email } = req.params;
 
-        const result = await db.collection('users').deleteOne({ _id: ObjectId(userId) });
-        if (result.deletedCount === 0) {
-            return res.status(404).json({ error: 'User not found' });
+    try {
+        const db = await connectToDatabase();
+        const user = await db.collection('users').findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
         }
-        res.json({ message: 'User deleted' });
+
+        res.status(200).json(user);
     } catch (error) {
-        console.error('Error deleting user:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        console.error('Error fetching user by email:', error);
+        res.status(500).json({ message: 'Internal Server Error', error: error.message });
+    }
+});
+
+// PUT /users/email/:email - Update a user by email
+router.put('/email/:email', async (req, res) => {
+    const { email } = req.params;
+    const updatedUser = req.body;
+
+    try {
+        const db = await connectToDatabase();
+        const result = await db.collection('users').updateOne(
+            { email }, // Filter by email
+            { $set: updatedUser } // Update fields
+        );
+
+        if (result.modifiedCount === 0) {
+            return res.status(404).json({ message: 'User not found or no changes made' });
+        }
+
+        res.status(200).json({ message: 'User updated' });
+    } catch (error) {
+        console.error('Error updating user by email:', error);
+        res.status(500).json({ message: 'Internal Server Error', error: error.message });
     }
 });
 
 module.exports = router;
-
-
-// User Routes:
-// Create User: POST /api/users
-// Get All Users: GET /api/users
-// Get User by ID: GET /api/users/:id
-// Update User by ID: PUT /api/users/:id
-// Delete User by ID: DELETE /api/users/:id
