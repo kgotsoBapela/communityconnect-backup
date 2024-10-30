@@ -12,7 +12,7 @@ async function connectDB() {
             useUnifiedTopology: true,
         });
         await client.connect();
-        process.env.DB_NAME = client.db(); // Default database from URI
+        db = client.db(); // Default database from URI
         console.log('MongoDB connected successfully');
     } catch (error) {
         console.error('MongoDB connection failed:', error.message);
@@ -21,10 +21,10 @@ async function connectDB() {
 }
 
 const getDB = () => {
-    if (!process.env.DB_NAME) {
+    if (!db) {
         throw new Error('Database not initialized. Call connectDB first.');
     }
-    return process.env.DB_NAME;
+    return db;
 };
 
 module.exports = { connectDB, getDB };
