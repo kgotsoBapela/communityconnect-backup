@@ -2,7 +2,8 @@
 const { MongoClient } = require('mongodb');
 require('dotenv').config();
 
-let db = "CCxStandert";
+// let db = "CCxStandert";
+// process.env.DB_NAME
 
 async function connectDB() {
     try {
@@ -11,7 +12,7 @@ async function connectDB() {
             useUnifiedTopology: true,
         });
         await client.connect();
-        db = client.db(); // Default database from URI
+        process.env.DB_NAME = client.db(); // Default database from URI
         console.log('MongoDB connected successfully');
     } catch (error) {
         console.error('MongoDB connection failed:', error.message);
@@ -20,10 +21,10 @@ async function connectDB() {
 }
 
 const getDB = () => {
-    if (!db) {
+    if (!process.env.DB_NAME) {
         throw new Error('Database not initialized. Call connectDB first.');
     }
-    return db;
+    return process.env.DB_NAME;
 };
 
 module.exports = { connectDB, getDB };
