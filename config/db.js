@@ -2,8 +2,8 @@
 const { MongoClient } = require('mongodb');
 require('dotenv').config();
 
-let db;
-// process.env.DB_NAME
+// const uri = process.env.MONGODB_URI;
+// const dbName = process.env.DB_NAME;
 
 async function connectDB() {
     try {
@@ -12,7 +12,7 @@ async function connectDB() {
             useUnifiedTopology: true,
         });
         await client.connect();
-        db = client.db(); // Default database from URI
+        db = client.db(process.env.DB_NAME); // Default database from URI
         console.log('MongoDB connected successfully');
     } catch (error) {
         console.error('MongoDB connection failed:', error.message);
