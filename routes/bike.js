@@ -1,7 +1,6 @@
 const express = require('express');
 const { connectToDatabase } = require('../config/db');
 const { ObjectId } = require('mongodb'); // Import ObjectId to handle MongoDB IDs
-
 const router = express.Router();
 
 // GET /bikes - Fetch all bikes
